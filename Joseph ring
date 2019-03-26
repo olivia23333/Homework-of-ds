@@ -1,0 +1,100 @@
+#include<stdio.h>
+#include<stdlib.h
+#define N 5 //参加游戏总人数
+typedef struct node{
+	int num;//每人编号
+	int code;//每人密码
+	struct node* next;
+}Node;
+typedef struct node* ptrn;
+int a[N] = { 6,1,4,2,6 };
+
+ptrn init_linklist()
+{
+	ptrn head;
+	head = (ptrn)malloc(sizeof(Node));
+	head->num = 1;
+	head->next = NULL;
+	head->code = a[0];
+	return head;
+}
+
+ptrn add_linklist(int i)
+{
+	ptrn q;
+	q = (ptrn)malloc(sizeof(Node));
+	q->num = i+1;
+	q->next = NULL;
+	q->code = a[i];
+	return q;
+}
+
+
+ptrn delete_listlink(int *code,ptrn p,int *number)
+{
+	int i;
+	ptrn s;
+	if (*code == 1)
+	{
+		s = p;
+		*code = s->code;
+		*number = s->num;
+		while (p->next != s)
+		{
+			p = p->next;
+		}
+		p->next = s->next;
+		free(s);
+	}
+	else
+	{
+		for (i = 1;i != *code - 1;i++)
+		{
+			p = p->next;
+		}
+		s = p->next;
+		p->next = s->next;
+		*code = s->code;
+		*number = s->num;
+		free(s);
+	}
+	return p->next;
+}
+
+void game_Joseph_ring(ptrn head)
+{
+	int code;
+	printf("input code:");
+	scanf_s("%d", &code);
+	int i;
+	ptrn list;
+	list = head;
+	int number;
+	
+	for (i = 0;i < N -1;i++)
+	{
+		printf("code for this round is %d\n", code);
+		list=delete_listlink(&code, list,&number);
+		printf("NO %d out\n", number);
+	}
+	printf("NO %d win\n", list->num);
+}
+
+
+int main()
+{
+	ptrn head = init_linklist();
+	int i;
+	ptrn q;
+	q = head;
+	for (i = 1;i < N;i++)
+	{
+		q->next=add_linklist(i);
+		q=q->next;
+	}
+	q -> next = head;
+	//游戏开始
+	game_Joseph_ring(head);
+	
+	return 0;
+}
