@@ -1,0 +1,196 @@
+实习报告
+题目：约瑟夫环（报数问题）——单循环链表
+班级：电子信息1808 姓名：张维天 学号：U201813458 完成日期：2019.3.25
+一、	需求分析
+1.	本演示程序中，参与游戏的人数设定为N人，初始密码code的输入形式为scanf（以回车符结束的int型变量）,其余密码用数组形式直接保存在程序内,人数N作为常量用#define定义在程序开头。
+2.	演示程序以用户和计算机对话的方式执行，及在计算机终端上显示“Input the code”之后，由用户在键盘上输入初始的密码，相应的输入数据和运算结果显示在其后。
+3.	程序执行的命令包括
+（1）	初始化链表头（2）连接形成单链表（3）按照规则进行游戏
+开始游戏之前，需输入类型为整型数int的初始密码code。
+4.	测试数据
+（1）	A[7]={3,1,7,2,4,8,4},code=20;
+（2）	A[5]={6,1,4,2,6},code=13;
+二、	概要设计
+为实现上述程序功能，应以单链表表示集合。为此需要一个抽象数据类型：线性表。
+1.	链表的抽象数据类型定义为：
+ADT List {
+数据对象：D = { ai | ai∈ElemSet, i=1,2,...,n, n≧0 }
+数据关系：R = {<ai-1, ai> | ai-1, ai∈D, i=2,3,...,n }
+基本操作：
+InitList( &L )
+操作结果：构造一个空的线性表L；
+1.线性表是一种相当灵活的数据结构，其长度可根据需要增长或缩短。
+2.对线性表的数据元素可以访问、插入和删除。
+ListLength( L )
+初始条件：线性表L已存在；
+操作结果：若L为空表，则返回TRUE，否则返回FALSE；
+....
+GetElem( L, i, &e )
+初始条件：线性表L已存在，1≦i≦ListLength(L)；
+操作结果：用e返回L中第i个数据元素的值；
+ListInsert ( L, i, &e )
+初始条件：线性表L已存在，1≦i≦ListLength(L) ；
+操作结果：在线性表L中的第i个位置插入元素e；
+...
+} ADT List
+
+2.	本程序包含四个模块
+1）	主程序模块
+Int main(){
+初始化；
+连接并形成单链表；
+执行游戏函数（命令）；
+return 0;}
+2）	线性表单元模块——实现线性表的抽象数据类型
+3）	游戏单元模块——实现游戏规则的运行和游戏结果的输出
+各模块之间的调用关系如下：
+主程序模块
+
+线性表单元模块
+
+游戏单元模块
+三、	详细设计
+1.	结点类型和指针类型
+typedef struct node{
+	ElemType num;//每人编号
+	ElemType code;//每人密码
+	struct node* next;
+}Node;//结点类型
+typedef struct node* ptrn;//指针类型
+2.	根据线性表的基本操作的特点，线性表采用单链表实现。链表设置一个头指针。
+ptrn init_linklist()
+{
+	ptrn head;
+	head = (ptrn)malloc(sizeof(Node));
+	head->num = 1;
+	head->next = NULL;
+	head->code = a[0];
+	return head;
+}
+ptrn add_linklist(int i)
+{
+	ptrn q;
+	q = (ptrn)malloc(sizeof(Node));
+	q->num = i+1;
+	q->next = NULL;
+	q->code = a[i];
+	return q;
+}
+ptrn delete_listlink(int *code,ptrn p,int *number)
+{
+	int i;
+	ptrn s;
+	if (*code == 1)
+	{
+		s = p;
+		*code = s->code;
+		*number = s->num;
+		while (p->next != s)
+		{
+			p = p->next;
+		}
+		p->next = s->next;
+		free(s);
+	}
+	else
+	{
+		for (i = 1;i != *code - 1;i++)
+		{
+			p = p->next;
+		}
+		s = p->next;
+		p->next = s->next;
+		*code = s->code;
+		*number = s->num;
+		free(s);
+	}
+	return p->next;
+}
+3. 约瑟夫环利用单链表List来实现，定义为单链表Node。
+int main()
+{
+	ptrn head = init_linklist();
+	int i;
+	ptrn q;
+	q = head;
+	for (i = 1;i < N;i++)
+	{
+		q->next=add_linklist(i);
+		q=q->next;
+	}
+	q -> next = head;
+	//游戏开始
+	game_Joseph_ring(head);
+	
+	return 0;
+}
+4.主函数和其他函数的算法
+int main()
+{
+	ptrn head = init_linklist();
+	int i;
+	ptrn q;
+	q = head;
+	for (i = 1;i < N;i++)
+	{
+		q->next=add_linklist(i);
+		q=q->next;
+	}
+	q -> next = head;
+	//游戏开始
+	game_Joseph_ring(head);
+	
+	return 0;
+}
+void game_Joseph_ring(ptrn head)
+{
+	int code;
+	printf("input code:");
+	scanf_s("%d", &code);
+	int i;
+	ptrn list;
+	list = head;
+	int number;
+	
+	for (i = 0;i < N -1;i++)
+	{
+		printf("code for this round is %d\n", code);
+		list=delete_listlink(&code, list,&number);
+		printf("NO %d out\n", number);
+	}
+	printf("NO %d win\n", list->num);
+}
+四、调试分析
+1.最开始创建链表的时候忽视了链表的性质直接对指向链表的指针运用p++，而非p=p->next来移动指针。
+2.忽视了code=1 的情况造成了死循环，后来为这种情况单独写了一个if。
+3.算法的时空分析
+1）创建单循环链表O(1),连接单循环链表O（N）。
+2）游戏执行函数中调用删除函数的时间复杂度为O（N）。
+3）删除函数中需要对链表便利一次时间复杂度为O（N），所以游戏执行函数的时间复杂度为O(N)。
+五、用户手册
+1.本程序的运行环境为Windows操作系统，执行文件为Josephring.exe
+2进入演示程序后即显示“Input the code”
+3.输入初始密码，结束符为回车键
+4.立即执行相应运算和显示相应结果
+六、测试结果
+创建单循环链表
+开始游戏
+执行命令“13”
+通过循环删除
+返回指针
+（通过地址返回新的密码）
+得到输出
+input code:13
+code for this round is 13
+NO 3 out
+code for this round is 4
+NO 2 out
+code for this round is 1
+NO 4 out
+code for this round is 2
+NO 1 out
+NO 5 win
+七、附录
+源程序文件名清单
+stdio.h	
+stdlib.h
