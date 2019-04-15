@@ -1,0 +1,358 @@
+实习报告2
+题目：火车进出站（卡特兰数）
+班级：电信1808 姓名：张维天 学号：U201813458 完成日期 2019.4.15
+一、	需求分析
+（1）	宏定义#define Maxsize ，通过改变Maxsize的数值，改变题目要求的需要处理的火车数量
+（2）	以0和1 表示对火车的操作，0表示pop出栈，1表示push入栈。
+所有可能情况用0和1 的不同排列顺序，及二进制来表示。
+建立二维数组 ElementType binary[300][2*Maxsize]，存储每一个可能顺序的数值。（因为测试数最大为4，所以需要存储的二进制数数目不会超过256，此处用300表示最大存储的可能排列方法数），二进制的位数用2*Maxsize表示。（因为对于Maxsize辆火车需要Maxsize 次出栈和Maxsize次出栈操作，共2*Maxsize 位）
+经过排除，得到所有成功的出站的火车序列，把所有序列存储在一维数组ElementType array[Maxsize]里。（Maxsize表示出栈火车数）
+（3）	通过循环，遍历并打印所有可能的出栈结果。
+（4）	测试数据为：1，2，3，4
+（5）	程序执行的命令为：
+1）	确定所有可能性的总数
+2）	找出总数下所有表征进出站方式的二进制数，并存储
+3）	经过排查选出能够实现的进出站方式，并将其出站结果存储下来
+4）	输出所有合理的出站结果
+二、	概要设计
+1.	设定栈的抽象数据类型定义：
+ADT 栈(stack)
+Data
+同线性表。元素具有相同的类型，相邻元素具有前驱和后堆关系。
+Operation
+InitStack ( *S )：初始化操作.建立一个空栈S。
+DestroyStack ( *S )：若栈存在，則销毁它。
+ClearStack (*S)：将栈清空。
+StackEmpty ( S ):若栈为空，返回true,否則返回 false。
+GetTop (S,*e)：若栈存在且非空，用e返回S的栈顶元素。
+Push (*S,e)：若栈S存在，插入新元素e到栈S中并成为栈頂元素。
+Pop (*S,*e)：删除栈S中栈顶元素，并用e返回其值。
+StackLength (S)：返回回栈S的元素个数。
+endADT
+2.	本程序包含4个模块
+1）	主程序模块
+int main()
+{
+	struct input enter;
+	enter.first = 1;
+	enter.last = Maxsize;
+	ptrs S;
+	S = initstack();
+	int i,j,k,num;
+	for (i = 0,num=1;i < 2*Maxsize;i++)
+	{
+		num *= 2;
+		//printf("%d\t", num);
+	}
+
+	int m = 0;
+	for (i = 0;i < num;i++)
+	{
+		//printf("%d\n", i);
+		for (j = 2 * Maxsize - 1, k = i,m=0;j >= 0;j--)
+		{
+			binary[i][j] = k % 2;
+			k = k / 2;
+			//printf("binary[%d][%d]=%d\n", i, j, binary[i][j]);
+			if (binary[i][j] == 0)
+			{
+				m++;
+			}
+		}
+		if (m != Maxsize)
+		{
+			for (j = 0;j < 2 * Maxsize - 1;j++)
+			{
+				binary[i][j] = 0;
+			}
+		}
+	}
+	
+	for (i = 0;i < num;i++)
+	{
+		//printf("i=%d\n", i);
+		arrange(S, binary, array, i);
+	}
+	return 0;
+}
+
+2）	栈模块
+实现栈抽象数据类型
+3）	进出站可能性排除，合理可能性存储模块
+void arrange(ptrs S, int binary[100][2 * Maxsize], int * array, int i)
+{
+	//0 represent pop 1 represent push
+	int j, k, m;
+	for (j = 0, k = 0, m = 1;j < 2 * Maxsize;j++)
+	{
+		//printf("binary[%d][%d]=%d\n", i, j, binary[i][j]);
+		if (binary[i][0] == 0)
+		{
+			break;
+		}
+		else if (binary[i][2 * Maxsize - 1] == 1)
+		{
+			break;
+		}
+		else
+		{
+			if (binary[i][j] == 0)
+			{
+				array[k] = pop(S);
+				//printf("array[%d]=%d", k, array[k]);
+				if (array[k++] == -1)
+				{
+					array[0] = 0;
+					break;
+				}
+			}
+			else
+			{
+				push(S, m);
+				//printf("m=%d\n", m);
+				m++;
+			}
+		}
+	}
+	print(array);
+}
+
+4）	打印结果模块
+void print(int * array)
+{
+	int i;
+	if (array[0] != 0)
+	{
+		for (i = 0;i < Maxsize;i++)
+		{
+			printf("%d->", array[i]);
+		}
+		printf("\n");
+		//M++;
+	}
+	//printf("M=%d", M);
+}
+
+三、	详细设计
+1.	栈类型和栈操作
+typedef struct input
+{
+	int first;
+	int last;
+}input;
+
+typedef struct output
+{
+	int Data [Maxsize];
+	int top;
+}output,*ptrs;
+
+ptrs initstack()
+{
+	ptrs S;
+	S = (ptrs)malloc(sizeof(output));
+	S->top = -1;
+	return S;
+}
+
+int IsEmpty(ptrs S)
+{
+	return(S->top == -1);
+}
+
+int IsFull(ptrs S)
+{
+	return(S->top == Maxsize - 1);
+}
+
+void push(ptrs S, int e)
+{
+	if (IsFull(S))
+	{
+		return;
+	}
+	else
+	{
+		S->Data[++(S->top)] = e;
+	}
+}
+
+int pop(ptrs S)
+{
+	if (IsEmpty(S))
+	{
+		return -1;
+	}
+	else
+	{
+		return(S->Data[(S->top)--]);
+	}
+}
+2所有可能结果排除，存储合理结果
+void arrange(ptrs S, int binary[100][2 * Maxsize], int * array, int i)
+{
+	//0 represent pop 1 represent push
+	int j, k, m;
+	for (j = 0, k = 0, m = 1;j < 2 * Maxsize;j++)
+	{
+		//printf("binary[%d][%d]=%d\n", i, j, binary[i][j]);
+		if (binary[i][0] == 0)
+		{
+			break;
+		}
+		else if (binary[i][2 * Maxsize - 1] == 1)
+		{
+			break;
+		}
+		else
+		{
+			if (binary[i][j] == 0)
+			{
+				array[k] = pop(S);
+				//printf("array[%d]=%d", k, array[k]);
+				if (array[k++] == -1)
+				{
+					array[0] = 0;
+					break;
+				}
+			}
+			else
+			{
+				push(S, m);
+				//printf("m=%d\n", m);
+				m++;
+			}
+		}
+	}
+	print(array);
+}
+
+四、	调试分析
+1.	刚开始排除二进制表示的可能情况时，有部分不合理情况没有排除掉。
+2.	最后虽然能够打印出所有结果，但其中有重复，尚在调试中，修改未成功。
+3.	本题时间复杂度较高：O（2的n 次方）
+五、	用户手册
+1.	本程序的运行环境为DOS操作系统，执行文件为 train_arrangement.exe
+2.	在宏定义处输入需要处理的火车数
+3.	输出所有可能的出栈结果
+六、	测试结果
+四组测试数据和输出结果如下
+Maxsize=1(1个)
+1->
+1->
+	Maxsize=2（2个）
+		1->2->
+1->2->
+2->1->
+2->1->
+2->1->
+2->1->
+Maxsize=3（5种）
+	1->2->3->
+1->2->3->
+1->3->2->
+1->3->2->
+1->3->2->
+1->3->2->
+1->3->2->
+1->3->2->
+2->1->3->
+2->1->3->
+2->3->1->
+2->3->1->
+2->3->1->
+2->3->1->
+3->2->1->
+3->2->1->
+3->2->1->
+3->2->1->
+3->2->1->
+3->2->1->
+3->2->1->
+3->2->1->
+Maxsize=4（14种）
+1->2->3->4->
+1->2->3->4->
+1->2->4->3->
+1->2->4->3->
+1->2->4->3->
+1->2->4->3->
+1->2->4->3->
+1->2->4->3->
+1->3->2->4->
+1->3->2->4->
+1->3->4->2->
+1->3->4->2->
+1->3->4->2->
+1->3->4->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+1->4->3->2->
+2->1->3->4->
+2->1->3->4->
+2->1->4->3->
+2->1->4->3->
+2->1->4->3->
+2->1->4->3->
+2->1->4->3->
+2->1->4->3->
+2->3->1->4->
+2->3->1->4->
+2->3->4->1->
+2->3->4->1->
+2->3->4->1->
+2->3->4->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+2->4->3->1->
+3->2->1->4->
+3->2->1->4->
+3->2->4->1->
+3->2->4->1->
+3->2->4->1->
+3->2->4->1->
+3->4->2->1->
+3->4->2->1->
+3->4->2->1->
+3->4->2->1->
+3->4->2->1->
+3->4->2->1->
+3->4->2->1->
+3->4->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+4->3->2->1->
+七、	附录
+#include<stdio.h>
+#include<stdlib.h>
