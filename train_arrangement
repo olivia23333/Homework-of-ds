@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include<stdlib.h>
+#define Maxsize 4
+
+int M = 0;
+int array[Maxsize];
+int binary[300][2*Maxsize];
+
+typedef struct input
+{
+	int first;
+	int last;
+}input;
+
+typedef struct output
+{
+	int Data [Maxsize];
+	int top;
+}output,*ptrs;
+
+ptrs initstack()
+{
+	ptrs S;
+	S = (ptrs)malloc(sizeof(output));
+	S->top = -1;
+	return S;
+}
+
+int IsEmpty(ptrs S)
+{
+	return(S->top == -1);
+}
+
+int IsFull(ptrs S)
+{
+	return(S->top == Maxsize - 1);
+}
+
+void push(ptrs S, int e)
+{
+	if (IsFull(S))
+	{
+		return;
+	}
+	else
+	{
+		S->Data[++(S->top)] = e;
+	}
+}
+
+int pop(ptrs S)
+{
+	if (IsEmpty(S))
+	{
+		return -1;
+	}
+	else
+	{
+		return(S->Data[(S->top)--]);
+	}
+}
+
+void print(int * array)
+{
+	int i;
+	if (array[0] != 0)
+	{
+		for (i = 0;i < Maxsize;i++)
+		{
+			printf("%d->", array[i]);
+		}
+		printf("\n");
+		//M++;
+	}
+	//printf("M=%d", M);
+}
+
+void arrange(ptrs S, int binary[100][2 * Maxsize], int * array, int i)
+{
+	//0 represent pop 1 represent push
+	int j, k, m;
+	for (j = 0, k = 0, m = 1;j < 2 * Maxsize;j++)
+	{
+		//printf("binary[%d][%d]=%d\n", i, j, binary[i][j]);
+		if (binary[i][0] == 0)
+		{
+			break;
+		}
+		else if (binary[i][2 * Maxsize - 1] == 1)
+		{
+			break;
+		}
+		else
+		{
+			if (binary[i][j] == 0)
+			{
+				array[k] = pop(S);
+				//printf("array[%d]=%d", k, array[k]);
+				if (array[k++] == -1)
+				{
+					array[0] = 0;
+					break;
+				}
+			}
+			else
+			{
+				push(S, m);
+				//printf("m=%d\n", m);
+				m++;
+			}
+		}
+	}
+	print(array);
+}
+
+
+
+int main()
+{
+	struct input enter;
+	enter.first = 1;
+	enter.last = Maxsize;
+	ptrs S;
+	S = initstack();
+	int i,j,k,num;
+	for (i = 0,num=1;i < 2*Maxsize;i++)
+	{
+		num *= 2;
+		//printf("%d\t", num);
+	}
+
+	int m = 0;
+	for (i = 0;i < num;i++)
+	{
+		//printf("%d\n", i);
+		for (j = 2 * Maxsize - 1, k = i,m=0;j >= 0;j--)
+		{
+			binary[i][j] = k % 2;
+			k = k / 2;
+			//printf("binary[%d][%d]=%d\n", i, j, binary[i][j]);
+			if (binary[i][j] == 0)
+			{
+				m++;
+			}
+		}
+		if (m != Maxsize)
+		{
+			for (j = 0;j < 2 * Maxsize - 1;j++)
+			{
+				binary[i][j] = 0;
+			}
+		}
+	}
+	
+	for (i = 0;i < num;i++)
+	{
+		//printf("i=%d\n", i);
+		arrange(S, binary, array, i);
+	}
+	return 0;
+}
