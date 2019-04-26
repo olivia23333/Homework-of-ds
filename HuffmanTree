@@ -1,0 +1,210 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+#define maxsize 27
+
+typedef struct {
+	int weight;
+	int parent, lchild, rchild;
+	char c;
+} HTnode, *HuffmanTree;
+
+typedef char** HuffmanCode;
+
+int alcode[maxsize] = { 186,64,13,22,32,103,21,15,47,57,1,5,32,20,57,63,15,1,48,51,80,23,8,18,1,16,1 };
+char code[maxsize] = { ' ','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z' };
+char str[] = "THIS PROGRAM IS MY FAVORITE";
+
+void select(HuffmanTree HT, int *s1, int *s2, int m)
+{
+	int i, min, semin;
+	min = 100000000;
+
+	for (i = m, *s1 = -1; i >= 0; i--)
+	{
+		if (HT[i].weight < min && HT[i].parent == -1)
+		{
+			*s1 = i;
+			min = HT[i].weight;
+		}
+		// printf("s1: %d %d\t", *s1, HT[*s1].weight);
+	}
+	//printf("s1: %d %d\n", *s1, HT[*s1].weight);
+
+	int tmp = HT[*s1].weight;
+	HT[*s1].weight = 1000000;
+
+	semin = 10000;
+
+	//printf("%d\t", *s1);
+	for (i = m, *s2 = -1;i >= 0;i--)
+	{
+		if (HT[i].weight < semin && HT[i].parent == -1)
+		{
+			*s2 = i;
+			semin = HT[i].weight;
+		}
+	}
+
+	//printf("s2: %d %d\n", *s2, HT[*s2].weight);
+
+	HT[*s1].weight = tmp;
+	//printf("%d\n", *s2);
+}
+
+void Huffmancoding(HuffmanTree*  HT)
+{
+	int m, i;
+	if (maxsize <= 1) return;
+	//printf("maxsize = %d\n", maxsize);
+
+	m = 2 * maxsize - 1;
+	(*HT) = (HuffmanTree)malloc(m * sizeof(HTnode));
+	//printf("init HuffTree done\n");
+
+	for (i = 0;i < maxsize;i++)
+	{
+		(*HT)[i].weight = alcode[i];
+		(*HT)[i].c = code[i];
+		(*HT)[i].parent = -1;
+		(*HT)[i].lchild = -1;
+		(*HT)[i].rchild = -1;
+	}
+
+	for (i = maxsize;i < m;i++)
+	{
+		(*HT)[i].weight = 0;
+		(*HT)[i].c = 'r';
+		(*HT)[i].parent = -1;
+		(*HT)[i].lchild = -1;
+		(*HT)[i].rchild = -1;
+	}//initialize
+
+	//for (i = 0; i < m; ++i)
+		//printf("%d: %d %c\n", i, (*HT)[i].weight, (*HT)[i].c);
+
+	//printf("%d\t", (*HT)[52].weight);
+	int s1, s2;
+	for (i = maxsize; i < m;i++)
+	{
+		select(*HT, &s1, &s2, i - 1);
+		//printf("i = %d, s1 %d: %d %c\n", i, s1, (*HT)[s1].weight, (*HT)[s1].c);
+		//printf("i = %d, s2 %d: %d %c\n", i, s2, (*HT)[s2].weight, (*HT)[s2].c);
+
+		(*HT)[i].lchild = s1;
+		(*HT)[i].rchild = s2;
+		(*HT)[i].weight = (*HT)[s1].weight + (*HT)[s2].weight;
+		(*HT)[s1].parent = i;
+		(*HT)[s2].parent = i;
+
+		//printf("end of value assign\n");
+		//printf("%d\t", (*HT)[52].weight);
+	}
+	//printf("end of building tree\n");
+	//create the huffmantree
+	//printf("%d", (*HT)[5].parent);
+
+	char *ptrs = str;
+	for (;*ptrs != '\0';ptrs++)
+	{
+		int k = 0;
+		int q;
+		char * cd;
+		cd = (char *)malloc(maxsize * sizeof(char));
+		for (i = 0;(*HT)[i].c != *ptrs;i++);
+		int s;
+		q = i;
+		//printf("i=%d\n", i);
+		//printf("%d", (*HT)[1].parent);
+		for (s = (*HT)[i].parent;s != -1;q = s, s = (*HT)[s].parent)
+		{
+			//printf("s %d\n", s);
+			//printf("parent %d\n", (*HT)[i].parent);
+			//printf("q %d\n", q);
+			//printf("s_parent %d\n", (*HT)[s].parent);
+			if ((*HT)[s].lchild == q)
+			{
+				//printf("s %d\n", s);
+				cd[k] = '0';
+				//printf(" %c", cd[k]);
+				//printf(" %d\t", k);
+				k++;
+			}
+			else
+			{
+				//printf("s %d\n", s);
+				cd[k] = '1';
+				//printf(" %c", cd[k]);
+				//printf(" %d\t ", k);
+				k++;
+			}
+			//s = (*HT)[s].parent;
+			//cd[k] = '\0';
+		}
+		//printf("end of coding\n");
+		//printf("%d", k);
+		cd[k] = '\0';
+		k--;
+		for (;k >= 0;k--)
+		{
+			printf("%c", cd[k]);
+		}
+		free(cd);
+	}
+	printf("\n");
+	//free(*HT);
+}
+
+void Decoding(HuffmanTree  HT)
+{
+	char string[] = {"1101000101110011111100001001010011000100010101111001011101110011111110010100011111110011101111000001001001001111101010"};
+	//int i;
+	//i = strlen(string);
+	//printf("%d", i);
+	//string[i] = '\0';
+	char * ptrs = string;
+	//puts(string);
+	int s = 52;
+
+	while (*ptrs != '\0')
+	{
+		//printf("%c\n", *ptrs);
+		if (*ptrs == '0'&&HT[s].lchild != -1)
+		{
+			s = HT[s].lchild;
+			//printf("s0 %d\n", s);
+			//printf("HT[s].lchild=%d", HT[s].lchild);
+			if (HT[s].lchild == -1)
+			{
+				printf("%c", HT[s].c);
+				s = 52;
+			}
+		}
+		else if (*ptrs == '1'&&HT[s].rchild != -1)
+		{
+			s = HT[s].rchild;
+			//printf("s1 %d\n", s);
+			//printf("HT[s].rchild =%d", HT[s].rchild);
+			if (HT[s].rchild == -1)
+			{
+				printf("%c", HT[s].c);
+				s = 52;
+			}
+		}
+		ptrs++;
+	}
+
+}
+
+int main()
+{
+	HuffmanTree HT;
+	//HuffmanCode HC;
+	//int i;
+	//i = strlen(str);
+	//printf("%d\t", i);
+	Huffmancoding(&HT);
+	Decoding(HT);
+	return 0;
+}
