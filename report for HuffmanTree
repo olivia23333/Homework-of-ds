@@ -1,0 +1,261 @@
+实习报告
+题目：完成Huffman编码和解码
+班级：电信1808 姓名：张维天 学号：U201813458 完成日期：2019/4/26
+
+一、	需求分析
+1.	用Huffman树对字母进行编码，左子树存较小值，右子树存较大值，以频率为权值，建立二叉树，到左子树的路径用‘0’来表示，到右子树的路径用‘1’来表示。
+2.	本程序的目的是：输入一串文本，可以将其编码。并对编码进行正确译码。
+3.	测试数据：文本：THIS PROGRAM IS MY FAVORITE。
+二、	概要设计
+1.	抽象数据类型定义：
+ADT  {树（tree）
+Data
+    树是由一个根结点和若干棵子树构成。树中结点具有相同数据类型及层次关系。
+Operation
+    InitTree(*T):构造空树T
+    DestroyTree(*T):销毁树T
+    CreateTree(*T,definition):按definition中给出树的定义来构造树
+    ClearTree(*T):若树T存在，则将树T清空为空树
+    TreeEmpty(T):若T为空树，返回true，否则返回false
+    TreeDepth(T):返回T的深度
+    Root(T):返回T的根结点
+    Value(T,cur_e):cur_e是树T中的一个结点，返回此结点的值
+    Assign(T,cur_e,value):给树T的结点cur_e赋值为value
+    Parent(T,cur_e):若cur_e是树T的非根结点，则返回它的双亲，否则返回空
+    LeftChild(T,cur_e):若cur_e是树T的非叶结点，则返回它的最左孩子，否则返回空
+    RightSibling(T,cur_e):若cur_e有右兄弟，则返回它的右兄弟，否则返回空
+    InsertChild(*T,*p,i,c):其中p指向树T的某个结点，i为所指结点p的度上加1，非空树c与T不相交，操作结果为插入c为树T中p指结点的第i棵子树
+    DeleteChild(*T,*p,i):其中p指向树T的某个结点，i为所指结点p的度，操作结果为删除T中p所指结点的第i棵子树
+}ADT
+2.	主程序
+int main()
+{
+	HuffmanTree HT;//建立存放树的动态结构体数组
+	Huffmancoding(&HT); //建树及编码，打印出编码
+Decoding(HT); //对编码内容进行解码
+
+	return 0;
+}
+三、	详细设计
+1.	Huffman树结点类型
+typedef struct {
+	int weight;
+	int parent, lchild, rchild;
+	char c;
+} HTnode, *HuffmanTree;
+2.	建树的算法和编码的算法
+void Huffmancoding(HuffmanTree*  HT)
+{
+	int m, i;
+	if (maxsize <= 1) return;
+	//printf("maxsize = %d\n", maxsize);
+
+	m = 2 * maxsize - 1;
+	(*HT) = (HuffmanTree)malloc(m * sizeof(HTnode));
+	//printf("init HuffTree done\n");
+
+	for (i = 0;i < maxsize;i++)
+	{
+		(*HT)[i].weight = alcode[i];
+		(*HT)[i].c = code[i];
+		(*HT)[i].parent = -1;
+		(*HT)[i].lchild = -1;
+		(*HT)[i].rchild = -1;
+	}
+
+	for (i = maxsize;i < m;i++)
+	{
+		(*HT)[i].weight = 0;
+		(*HT)[i].c = 'r';
+		(*HT)[i].parent = -1;
+		(*HT)[i].lchild = -1;
+		(*HT)[i].rchild = -1;
+	}//initialize
+
+	//for (i = 0; i < m; ++i)
+		//printf("%d: %d %c\n", i, (*HT)[i].weight, (*HT)[i].c);
+
+	//printf("%d\t", (*HT)[52].weight);
+	int s1, s2;
+	for (i = maxsize; i < m;i++)
+	{
+		select(*HT, &s1, &s2, i - 1);
+		//printf("i = %d, s1 %d: %d %c\n", i, s1, (*HT)[s1].weight, (*HT)[s1].c);
+		//printf("i = %d, s2 %d: %d %c\n", i, s2, (*HT)[s2].weight, (*HT)[s2].c);
+
+		(*HT)[i].lchild = s1;
+		(*HT)[i].rchild = s2;
+		(*HT)[i].weight = (*HT)[s1].weight + (*HT)[s2].weight;
+		(*HT)[s1].parent = i;
+		(*HT)[s2].parent = i;
+
+		//printf("end of value assign\n");
+		//printf("%d\t", (*HT)[52].weight);
+	}
+	//printf("end of building tree\n");
+	//create the huffmantree
+	//printf("%d", (*HT)[5].parent);
+
+	char *ptrs = str;
+	for (;*ptrs != '\0';ptrs++)
+	{
+		int k = 0;
+		int q;
+		char * cd;
+		cd = (char *)malloc(maxsize * sizeof(char));
+		for (i = 0;(*HT)[i].c != *ptrs;i++);
+		int s;
+		q = i;
+		//printf("i=%d\n", i);
+		//printf("%d", (*HT)[1].parent);
+		for (s = (*HT)[i].parent;s != -1;q = s, s = (*HT)[s].parent)
+		{
+			//printf("s %d\n", s);
+			//printf("parent %d\n", (*HT)[i].parent);
+			//printf("q %d\n", q);
+			//printf("s_parent %d\n", (*HT)[s].parent);
+			if ((*HT)[s].lchild == q)
+			{
+				//printf("s %d\n", s);
+				cd[k] = '0';
+				//printf(" %c", cd[k]);
+				//printf(" %d\t", k);
+				k++;
+			}
+			else
+			{
+				//printf("s %d\n", s);
+				cd[k] = '1';
+				//printf(" %c", cd[k]);
+				//printf(" %d\t ", k);
+				k++;
+			}
+			//s = (*HT)[s].parent;
+			//cd[k] = '\0';
+		}
+		//printf("end of coding\n");
+		//printf("%d", k);
+		cd[k] = '\0';
+		k--;
+		for (;k >= 0;k--)
+		{
+			printf("%c", cd[k]);
+		}
+		free(cd);
+	}
+	printf("\n");
+	//free(*HT);
+}
+3.	解码的算法
+void Decoding(HuffmanTree  HT)
+{
+	char string[] = {"1101000101110011111100001001010011000100010101111001011101110011111110010100011111110011101111000001001001001111101010"};
+	//int i;
+	//i = strlen(string);
+	//printf("%d", i);
+	//string[i] = '\0';
+	char * ptrs = string;
+	//puts(string);
+	int s = 52;
+
+	while (*ptrs != '\0')
+	{
+		//printf("%c\n", *ptrs);
+		if (*ptrs == '0'&&HT[s].lchild != -1)
+		{
+			s = HT[s].lchild;
+			//printf("s0 %d\n", s);
+			//printf("HT[s].lchild=%d", HT[s].lchild);
+			if (HT[s].lchild == -1)
+			{
+				printf("%c", HT[s].c);
+				s = 52;
+			}
+		}
+		else if (*ptrs == '1'&&HT[s].rchild != -1)
+		{
+			s = HT[s].rchild;
+			//printf("s1 %d\n", s);
+			//printf("HT[s].rchild =%d", HT[s].rchild);
+			if (HT[s].rchild == -1)
+			{
+				printf("%c", HT[s].c);
+				s = 52;
+			}
+		}
+		ptrs++;
+	}
+
+}
+4.	挑选最小的两个值（用于合并新结点）算法
+void select(HuffmanTree HT, int *s1, int *s2, int m)
+{
+	int i, min, semin;
+	min = 100000000;
+
+	for (i = m, *s1 = -1; i >= 0; i--)
+	{
+		if (HT[i].weight < min && HT[i].parent == -1)
+		{
+			*s1 = i;
+			min = HT[i].weight;
+		}
+		// printf("s1: %d %d\t", *s1, HT[*s1].weight);
+	}
+	//printf("s1: %d %d\n", *s1, HT[*s1].weight);
+
+	int tmp = HT[*s1].weight;
+	HT[*s1].weight = 1000000;
+
+	semin = 10000;
+
+	//printf("%d\t", *s1);
+	for (i = m, *s2 = -1;i >= 0;i--)
+	{
+		if (HT[i].weight < semin && HT[i].parent == -1)
+		{
+			*s2 = i;
+			semin = HT[i].weight;
+		}
+	}
+
+	//printf("s2: %d %d\n", *s2, HT[*s2].weight);
+
+	HT[*s1].weight = tmp;
+	//printf("%d\n", *s2);
+}
+5.	主函数的算法
+int main()
+{
+	HuffmanTree HT;
+	//HuffmanCode HC;
+	//int i;
+	//i = strlen(str);
+	//printf("%d\t", i);
+	Huffmancoding(&HT);
+	Decoding(HT);
+	return 0;
+}
+四、	设计和调试分析
+1.	此次调试耗时较长，零零散散大概花了一周，大约7到8小时。
+2.	主要问题在于s1和s2的取值不够小心
+没有解决一些可能出现的极端情况
+最初min和semin都取的数组内第一个数的权值，而忽略了当第一个数为最小值时s2的求解会出现问题。
+应对s1,s2都取一个较大的初值，才比较保险，可以消除这种影响。
+五、	用户手册
+需要运行两次程序
+第一次得到编码值，编码文本存储在以str命名的字符串数组内。
+运行后将编码值复制
+赋值给解码程序中用于存储解码字符的string字符串数组
+第二次运行
+界面会显示编码值和译码值
+六、	测试结果
+1101000101110011111100001001010011000100010101111001011101110011111110010100011111110011101111000001001001001111101010
+THIS PROGRAM IS MY FAVORITE
+七、	附录
+源文件
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+宏定义
+#define maxsize 27
